@@ -17,7 +17,7 @@ import java.net.URL;
 public class FloatingLensService extends Service {
     private WindowManager windowManager;
     private View floatingView;
-    private static final String BACKEND_URL = "https://YOUR-BACKEND-URL.com/decode-chat";
+    private static final String BACKEND_URL = "https://chat-decoder-2tai.onrender.com";
 
     @Override
     public IBinder onBind(Intent intent) {
