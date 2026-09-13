@@ -3,7 +3,7 @@ from fastapi import FastAPI, File, UploadFile
 import openai
 
 app = FastAPI()
-client = openai.OpenAI(api_key="YOUR_OPENAI_API_KEY")
+client = openai.OpenAI(api_key="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")
 
 STREET_SMART_PROMPT = """
 तू एक माहिर सोशल साइकोलॉजिस्ट और शार्प नेगोशिएटर है। 
@@ -24,7 +24,7 @@ async def decode_chat(file: UploadFile = File(...)):
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": STREET_SMART_PROMPT},
             {
