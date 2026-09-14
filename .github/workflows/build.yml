@@ -57,11 +57,11 @@ jobs:
           EOF
         working-directory: android-app
 
-      - name: Fix App Build Gradle
+      - name: Force Insert Namespace
         run: |
           if [ -f app/build.gradle ]; then
-            if ! grep -q "compileSdk" app/build.gradle; then
-              echo -e "\nandroid {\n    namespace 'com.chatdecoder.app'\n    compileSdk 34\n    defaultConfig {\n        minSdk 24\n        targetSdk 34\n    }\n}" >> app/build.gradle
+            if ! grep -q "namespace" app/build.gradle; then
+              sed -i '1i android { namespace "com.chatdecoder.app" }' app/build.gradle
             fi
           fi
         working-directory: android-app
