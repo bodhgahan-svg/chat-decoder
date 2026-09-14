@@ -15,11 +15,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Setup Gradle Wrapper
-        run: gradle wrapper
+      - name: Fix Plugin Repositories
+        run: |
+          if [ -f settings.gradle ] && ! grep -q "google()" settings.gradle; then
+            echo -e "pluginManagement {\n    repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }\n}\n$(cat settings.gradle)" > settings.gradle
+          fi
+        working-directory: android-app
+
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.5
         working-directory: android-app
 
       - name: Build Debug APK
