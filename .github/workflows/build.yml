@@ -23,7 +23,7 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Fix Gradle Config and Namespace
+      - name: Clean Gradle and App Config
         run: |
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -57,14 +57,17 @@ jobs:
           EOF
 
           if [ -f app/build.gradle ]; then
-            if ! grep -q "namespace" app/build.gradle; then
-              sed -i '/android {/a \    namespace "com.chatdecoder.app"' app/build.gradle || echo -e "\nandroid {\n    namespace \"com.chatdecoder.app\"\n}" >> app/build.gradle
+            sed -i '/namespace/d' app/build.gradle
+            if grep -q "android {" app/build.gradle; then
+              sed -i '/android {/a \    namespace "com.chatdecoder.app"' app/build.gradle
+            else
+              echo -e "\nandroid {\n    namespace \"com.chatdecoder.app\"\n}" >> app/build.gradle
             fi
           fi
         working-directory: android-app
 
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --stacktrace
         working-directory: android-app
 
       - name: Upload APK
