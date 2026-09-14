@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m1
     working_directory: android-app
     scripts:
-      - name: Setup Gradle Configuration and Build
+      - name: Setup and Build APK
         script: |
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -37,6 +37,18 @@ workflows:
               }
           }
           EOF
+
+          python3 -c "
+          import os
+          path = 'app/build.gradle'
+          if os.path.exists(path):
+              with open(path, 'r') as f:
+                  content = f.read()
+              if 'namespace' not in content:
+                  content = content.replace('android {', 'android {\n    namespace \"com.example.chatdecoder\"')
+                  with open(path, 'w') as f:
+                      f.write(content)
+          "
 
           gradle assembleDebug
     artifacts:
