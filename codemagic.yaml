@@ -4,9 +4,12 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m1
     working_directory: android-app
+    environment:
+      java: 17
     scripts:
-      - name: Setup and Build APK
+      - name: Create Perfect Build Environment & Compile
         script: |
+          # 1. Root settings.gradle
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -26,6 +29,7 @@ workflows:
           include ':app'
           EOF
 
+          # 2. Root build.gradle
           cat << 'EOF' > build.gradle
           buildscript {
               repositories {
@@ -38,18 +42,39 @@ workflows:
           }
           EOF
 
-          python3 -c "
-          import os
-          path = 'app/build.gradle'
-          if os.path.exists(path):
-              with open(path, 'r') as f:
-                  content = f.read()
-              if 'namespace' not in content:
-                  content = content.replace('android {', 'android {\n    namespace \"com.example.chatdecoder\"')
-                  with open(path, 'w') as f:
-                      f.write(content)
-          "
+          # 3. App module build.gradle with all required dependencies
+          cat << 'EOF' > app/build.gradle
+          plugins {
+              id 'com.android.application'
+          }
 
+          android {
+              namespace 'com.chatdecoder.app'
+              compileSdk 34
+
+              defaultConfig {
+                  applicationId "com.chatdecoder.app"
+                  minSdk 24
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+
+          dependencies {
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.material:material:1.11.0'
+              implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+              implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+          }
+          EOF
+
+          # 4. Compile APK
           gradle assembleDebug
     artifacts:
       - android-app/app/build/outputs/apk/**/*.apk
