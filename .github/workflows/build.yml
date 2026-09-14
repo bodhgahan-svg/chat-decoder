@@ -15,22 +15,40 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Fix Plugin Repositories
+      - name: Fix Build Environment
         run: |
-          if [ -f settings.gradle ] && ! grep -q "google()" settings.gradle; then
-            echo -e "pluginManagement {\n    repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }\n}\n$(cat settings.gradle)" > settings.gradle
-          fi
-        working-directory: android-app
+          echo "pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }" > settings.gradle.tmp
+          [ -f settings.gradle ] && cat settings.gradle >> settings.gradle.tmp || echo "include ':app'" >> settings.gradle.tmp
+          mv settings.gradle.tmp settings.gradle
 
-      - name: Generate Gradle Wrapper
-        run: gradle wrapper --gradle-version 8.5
+          cat << 'EOF' > root_fix.gradle
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.1.4'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
+          [ -f build.gradle ] && cat build.gradle >> root_fix.gradle
+          mv root_fix.gradle build.gradle
         working-directory: android-app
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: |
+          gradle wrapper --gradle-version 8.1.4
+          ./gradlew assembleDebug
         working-directory: android-app
 
       - name: Upload APK
