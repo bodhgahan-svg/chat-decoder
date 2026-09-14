@@ -18,13 +18,27 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Fix Build Environment
+      - name: Clean Gradle Config
         run: |
-          echo "pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }" > settings.gradle.tmp
-          [ -f settings.gradle ] && cat settings.gradle >> settings.gradle.tmp || echo "include ':app'" >> settings.gradle.tmp
-          mv settings.gradle.tmp settings.gradle
+          cat << 'EOF' > settings.gradle
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          include ':app'
+          EOF
 
-          cat << 'EOF' > root_fix.gradle
+          cat << 'EOF' > build.gradle
           buildscript {
               repositories {
                   google()
@@ -34,15 +48,7 @@ jobs:
                   classpath 'com.android.tools.build:gradle:8.1.4'
               }
           }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
           EOF
-          [ -f build.gradle ] && cat build.gradle >> root_fix.gradle
-          mv root_fix.gradle build.gradle
         working-directory: android-app
 
       - name: Build Debug APK
